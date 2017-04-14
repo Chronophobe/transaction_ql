@@ -49,6 +49,18 @@ module TransactionQL
     end
   end
 
+  class Not < Expression
+    attr_reader :expressions
+    def initialize(expressions)
+      @expressions = expressions
+    end
+
+    def matches?(hash)
+      result = @expressions.map { |exp| exp.matches? hash }.any?
+      return !(result)
+    end
+  end
+
   class Match < Expression
     def initialize(column, regexp)
       @column = column

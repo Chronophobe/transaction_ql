@@ -1,4 +1,5 @@
 require './lib/transaction_ql/expressions'
+require './lib/transaction_ql/filter'
 
 include TransactionQL
 
@@ -88,5 +89,56 @@ RSpec.describe All, '#matches?' do
       'c' => 12
     )
     expect(result).to be false
+  end
+end
+
+RSpec.describe Not, '#matches?' do
+  it 'returns true when all of its subexpressions does not match' do
+    expression = Not.new [
+      NumericExpression.new('x', 10, :>),
+      NumericExpression.new('y', 10, :>)
+    ]
+    result = expression.matches?('x' => 10, 'y' => 10)
+    expect(result).to be true
+
+    result = expression.matches?('x' => 11, 'y' => 10)
+    expect(result).to be false
+  end
+end
+
+RSpec.describe Filter, '#matches?' do
+  it 'returns true when everything in the filter matches' do
+    filter = Filter.new 'rspec-test' do
+      match 'sender', /INGB/i
+      invert { match 'description', /donation/i }
+      any {
+        greater 'amount', 50
+        smaller 'amount', 0
+      }
+    end
+
+    data = {
+      'sender' => 'NL31 INGB 1234 5678 90',
+      'amount' => 51,
+      'description' => 'rspec test description'
+    }
+    expect(filter.matches?(data)).to be true
+
+    data['description'] = 'donation to RSpec'
+    expect(filter.matches?(data)).to be false
+
+    data['description'] = 'rspec test description'
+    data['amount'] = -1
+    expect(filter.matches?(data)).to be true
+
+    data['amount'] = 50
+    expect(filter.matches?(data)).to be false
+
+    data['amount'] = 0
+    expect(filter.matches?(data)).to be false
+
+    data['amount'] = 51
+    data['sender'] = 'someone else'
+    expect(filter.matches?(data)).to be false
   end
 end

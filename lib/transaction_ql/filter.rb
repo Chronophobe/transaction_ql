@@ -1,4 +1,4 @@
-require 'transaction_ql/expressions'
+# require 'transaction_ql/expressions'
 
 module TransactionQL
   class Filter
@@ -8,19 +8,18 @@ module TransactionQL
       @name = name
       @query = All.new []
 
-      @in_any_block = false
-      @any_expressions = []
+      @in_block = false
+      @last_block = []
 
       instance_eval(&block)
     end
 
+    def matches?(hash)
+      @query.matches? hash
+    end
+
     def match(column, regex)
-      expression = Match.new(column, regex)
-      if @in_any_block
-        @any_expressions << expression
-      else
-        @query.expressions << expression
-      end
+      add_expression Match.new(column, regex)
     end
 
     def greater(column, other)
@@ -50,20 +49,33 @@ module TransactionQL
     end
 
     def any(&block)
-      raise 'Nested any blocks are not supported.' if @in_any_block
-      @in_any_block = true
+      raise 'Nested blocks are not supported.' if @in_block
+      @in_block = true
       instance_eval(&block)
-      @in_any_block = false
-      expression = Any.new @any_expressions
+      @in_block = false
+
+      expression = Any.new @last_block
       add_expression(expression)
+
       @any_expressions = []
+    end
+
+    def invert(&block)
+      raise 'Nested blocks are not supported.' if @in_block
+      @in_block = true
+      instance_eval(&block)
+      @in_block = false
+      expression = Not.new @last_block
+      add_expression(expression)
+
+      @last_block = []
     end
 
     private
 
     def add_expression(expression)
-      if @in_any_block
-        @any_expressions << expression
+      if @in_block
+        @last_block << expression
       else
         @query.expressions << expression
       end
