@@ -107,38 +107,63 @@ RSpec.describe Not, '#matches?' do
 end
 
 RSpec.describe Filter, '#matches?' do
-  it 'returns true when everything in the filter matches' do
-    filter = Filter.new 'rspec-test' do
-      match 'sender', /INGB/i
-      invert { match 'description', /donation/i }
-      any {
-        greater 'amount', 50
-        smaller 'amount', 0
+  context 'filter has a flat structure' do
+    it 'returns true when everything in the filter matches' do
+      filter = Filter.new 'rspec-test' do
+        match 'sender', /INGB/i
+        invert { match 'description', /donation/i }
+        any {
+          greater 'amount', 50
+          smaller 'amount', 0
+        }
+      end
+
+      data = {
+        'sender' => 'NL31 INGB 1234 5678 90',
+        'amount' => 51,
+        'description' => 'rspec test description'
       }
+      expect(filter.matches?(data)).to be true
+
+      data['description'] = 'donation to RSpec'
+      expect(filter.matches?(data)).to be false
+
+      data['description'] = 'rspec test description'
+      data['amount'] = -1
+      expect(filter.matches?(data)).to be true
+
+      data['amount'] = 50
+      expect(filter.matches?(data)).to be false
+
+      data['amount'] = 0
+      expect(filter.matches?(data)).to be false
+
+      data['amount'] = 51
+      data['sender'] = 'someone else'
+      expect(filter.matches?(data)).to be false
     end
+  end
 
-    data = {
-      'sender' => 'NL31 INGB 1234 5678 90',
-      'amount' => 51,
-      'description' => 'rspec test description'
-    }
-    expect(filter.matches?(data)).to be true
+  context 'filter has a nested structure' do
+    it 'returns true when everything in the filter matches' do
+      filter = Filter.new 'rspec-test' do
+        any {
+          invert { greater 'amount', 50 }
+          invert { smaller 'refund', 10 }
+        }
+      end
 
-    data['description'] = 'donation to RSpec'
-    expect(filter.matches?(data)).to be false
+      data = { 'amount' => 50, 'refund' => 9 }
+      expect(filter.matches?(data)).to be true
 
-    data['description'] = 'rspec test description'
-    data['amount'] = -1
-    expect(filter.matches?(data)).to be true
+      data = { 'amount' => 51, 'refund' => 10 }
+      expect(filter.matches?(data)).to be true
 
-    data['amount'] = 50
-    expect(filter.matches?(data)).to be false
+      data = { 'amount' => 50, 'refund' => 10 }
+      expect(filter.matches?(data)).to be true
 
-    data['amount'] = 0
-    expect(filter.matches?(data)).to be false
-
-    data['amount'] = 51
-    data['sender'] = 'someone else'
-    expect(filter.matches?(data)).to be false
+      data = { 'amount' => 51, 'refund' => 9 }
+      expect(filter.matches?(data)).to be false
+    end
   end
 end

@@ -1,4 +1,4 @@
-# require 'transaction_ql/expressions'
+require 'transaction_ql/expressions'
 
 module TransactionQL
   class Filter
@@ -8,8 +8,9 @@ module TransactionQL
       @name = name
       @query = All.new []
 
-      @in_block = false
-      @last_block = []
+      @block_depth = 0
+      @last_blocks = []
+      @timeframe = []
 
       instance_eval(&block)
     end
@@ -49,33 +50,28 @@ module TransactionQL
     end
 
     def any(&block)
-      raise 'Nested blocks are not supported.' if @in_block
-      @in_block = true
-      instance_eval(&block)
-      @in_block = false
-
-      expression = Any.new @last_block
-      add_expression(expression)
-
-      @any_expressions = []
+      last_block = process_inner(&block)
+      add_expression Any.new(last_block)
     end
 
     def invert(&block)
-      raise 'Nested blocks are not supported.' if @in_block
-      @in_block = true
-      instance_eval(&block)
-      @in_block = false
-      expression = Not.new @last_block
-      add_expression(expression)
-
-      @last_block = []
+      last_block = process_inner(&block)
+      add_expression Not.new(last_block)
     end
 
     private
 
+    def process_inner(&block)
+      @last_blocks.push []
+      @block_depth += 1
+      instance_eval(&block)
+      @block_depth -= 1
+      @last_blocks.pop
+    end
+
     def add_expression(expression)
-      if @in_block
-        @last_block << expression
+      if @block_depth > 0
+        @last_blocks[-1] << expression
       else
         @query.expressions << expression
       end

@@ -1,6 +1,6 @@
 Gem::Specification.new do |gem|
     gem.name        = 'transaction_ql'
-    gem.version     = '1.1.0'
+    gem.version     = '1.2.0'
     gem.date        = '2017-04-08'
     gem.summary     = 'Embedded DSL to filter bank transactions.'
     gem.description = 'Embedded DSL created to filter/categorise bank transactions.'
