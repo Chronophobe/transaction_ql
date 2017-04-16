@@ -52,6 +52,5 @@ end
 
 This example matches when:
 1. `'sender'` matches the regexp `/INGB/i`
-2. `'description'` does **not*
-* match the regexp `/donation/i`
+2. `'description'` does **not** match the regexp `/donation/i`
 3. `'amount'` is either greater than `50` **or** smaller than `0`
