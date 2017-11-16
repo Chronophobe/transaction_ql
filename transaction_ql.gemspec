@@ -5,12 +5,12 @@ Gem::Specification.new do |gem|
     gem.summary     = 'Embedded DSL to filter bank transactions.'
     gem.description = 'Embedded DSL created to filter/categorise bank transactions.'
     gem.authors     = ['Stan Janssen']
-    gem.email       = 'stan@janssen.io'
+    gem.email       = 'mail@janssen.io'
     gem.files       = [
         'lib/transaction_ql.rb',
         'lib/transaction_ql/filter.rb',
         'lib/transaction_ql/expressions.rb'
     ]
-    gem.homepage    = 'https://github.com/chronophobe/transaction_ql'
+    gem.homepage    = 'https://github.com/janssen-io/transaction-ql'
     gem.license     = 'MIT'
 end
